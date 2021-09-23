@@ -1,6 +1,9 @@
 from tkinter import *
 from bs4 import BeautifulSoup
 from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from googlesearch import search
 import requests
 from difflib import SequenceMatcher
@@ -16,7 +19,7 @@ def startBrowser():
 
 def getSourceCode():
 
-    #with open('test.html', 'w') as file:
+    #with open('example_checkbox.html', 'w') as file:
     #    file.write(driver.find_element_by_xpath("//body").get_attribute('outerHTML'))
 
     return driver.find_element_by_xpath("//body").get_attribute('outerHTML')
@@ -83,6 +86,9 @@ def radioQuestions(answer, soup):
             #print('#' + item.find('input')['id'])
             #driver.find_element_by_css_selector('#' + item.find('input')['id']).click()
             driver.find_element_by_xpath(xpath_soup(item)).click()
+            driver.find_element_by_xpath('//button[@aria-label="High Confidence"]').click()
+    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "btn ngx-shared btn-primary next-button")))
+    driver.find_element_by_xpath('//button[@class="btn ngx-shared btn-primary next-button"]').click()
 
 def mainFunction():
     html_text = getSourceCode()
@@ -95,7 +101,6 @@ def mainFunction():
     url = googleSearch(question)
     t1.insert(END, "Resource found \n")
     answer = quizletScraper(url, question)
-    print(answer)
     t1.insert(END, "Answer found \n")
     #while True:
     #    if 'type="radio"' in html_text:
