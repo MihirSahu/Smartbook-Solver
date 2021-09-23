@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from googlesearch import search
 import requests
+from difflib import SequenceMatcher
 
 window = Tk()
 
@@ -13,6 +14,10 @@ def startBrowser():
     driver.get(url)
 
 def getSourceCode():
+
+    #with open('test.html', 'w') as file:
+    #    file.write(driver.find_element_by_xpath("//body").get_attribute('outerHTML'))
+
     return driver.find_element_by_xpath("//body").get_attribute('outerHTML')
 
 def googleSearch(query):
@@ -35,7 +40,25 @@ def quizletScraper(quizletURL, question):
     for item in tags:
         if item.find('span', class_='TermText notranslate lang-en').text == question:
             #return item.find_all('span', class_='TermText notranslate lang-en')[1].text
-           print(item.find_all('span', class_='TermText notranslate lang-en')[1].text)
+           return item.find_all('span', class_='TermText notranslate lang-en')[1].text
+
+def radioQuestions(answer, soup):
+    list1 = []
+    list2 = []
+    div = soup.find_all('span', class_='choiceText rs_preserve')
+    for item in div:
+        list1.append(item.p.text)
+        list2.append(SequenceMatcher(None, answer, item.p.text).ratio())
+    maximum = max(list2)
+    for item in list2:
+        if maximum == item:
+            radioAnswer = list1[list2.index(item)]
+
+    div = soup.find('div', class_='responses-container')
+    choices = div.find_all('label')
+    for item in choices:
+        if item.find('span', class_='choiceText rs_preserve').p.text == radioAnswer:
+            driver.find_element_by_css_selector('#' + item.find('input')['id']).click()
 
 def mainFunction():
     html_text = getSourceCode()
@@ -47,9 +70,12 @@ def mainFunction():
     t1.insert(END, "Question detected \n")
     url = googleSearch(question)
     t1.insert(END, "Resource found \n")
-    #answer = quizletScraper(url, question)
-    quizletScraper(url, question)
+    answer = quizletScraper(url, question)
+    print(answer)
     t1.insert(END, "Answer found \n")
+    #while True:
+    #    if 'type="radio"' in html_text:
+    radioQuestions(answer, soup)
 
 l1 = Label(master=window,text="McGrawHill Smartbook Connect Solver")
 l1.grid(row=0,column=1)
